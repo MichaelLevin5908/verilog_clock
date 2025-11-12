@@ -1,0 +1,41 @@
+CS M152A – Lab 3: Stopwatch
+Team Members: Michael Levin & Johnny Zheng
+Section: Yangchao Wu
+Date: November 16th, 2025
+Instructor: Prof. Majid Sarrafzadeh
+
+1. Introduction and Requirements
+This lab assignment requires us to design a fully functional stopwatch on the Basys 3 FPGA board using Xilinx Vivado. The stopwatch must accept inputs from on-board switches and push buttons, keep time in minutes and seconds, and present the count on the four-digit seven-segment display.
+
+The stopwatch operates as a running clock by default, advancing from 00:00 upward in MM:SS format at a one-second cadence. After one minute and forty-three seconds, for example, the display should show “0143” without any user interaction.
+
+Two slider switches expose an adjustment mode. SEL chooses whether the minutes or seconds digits are the active field, while ADJ enables the adjustment behavior. When ADJ is high, the unselected field freezes, and the selected field increments at 2 Hz so the user can dial in a new value.
+
+The digits in the selected field must blink during adjustment to provide visual feedback about which portion of the display is changing. Normal one-second counting is suspended until ADJ is released.
+
+Two debounced push buttons provide additional controls. RESET clears the stopwatch back to 00:00 regardless of state, and PAUSE toggles between running and halted counting whenever it is pressed.
+
+2. Design Description
+The design is partitioned into clock generation, input conditioning, control, timekeeping, and display subsystems that interact through well-defined signals.
+
+The clock divider module derives four clocks from the 100 MHz oscillator: 1 Hz for base counting, 2 Hz for adjustment increments, a ~500 Hz multiplexing clock for the seven-segment display, and a 1.5 Hz blink clock for visual cues.
+
+Each push button and switch is debounced and synchronized using dedicated debounce_sync and edge_detect blocks so that mechanical chatter and asynchronous transitions do not propagate metastability into the synchronous logic.
+
+A finite state machine orchestrates the stopwatch modes. It tracks whether the counter is running or paused, whether adjust mode is active, and whether the user entered adjust while paused so it can return to the same state afterwards.
+
+The time_core module implements cascaded BCD counters for seconds and minutes. It accepts the different clock enables from the control FSM, applies synchronous reset, performs modulo-60 rollover, and exposes the current digits.
+
+The display_mux module multiplexes the four digits across the seven-segment display using the high-frequency clock. It also blanks the selected digits while the blink clock is low during adjustment to create the flashing effect.
+
+Status LEDs mirror key internal states—running, paused, adjusting minutes, adjusting seconds—to assist with debugging during hardware bring-up.
+
+3. Simulation Documentation
+Testbenches exercise normal counting, entering and exiting pause, toggling adjustment of both minutes and seconds, and asserting reset in each mode. Simulated waveforms confirm that the paused state persists through an adjust session, reset clears all digits, and blinking occurs only on the selected pair during adjustment.
+
+4. Conclusion
+The implemented stopwatch satisfies the specification by integrating precise timekeeping, robust input handling, flexible adjustment controls, and clear visual feedback. Modular decomposition simplified verification and will support future enhancements such as lap timing or alarm features.
+
+5. Appendix
+A. Source Files: clock_divider.v, debounce_sync.v, edge_detect.v, control_fsm.v, time_core.v, display_mux.v, top_stopwatch.v, tb_top_stopwatch.v
+B. References: CS M152A Lab 3 handout, Basys 3 reference manual, Digilent seven-segment documentation

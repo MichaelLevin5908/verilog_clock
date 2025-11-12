@@ -76,8 +76,28 @@ module tb_top_stopwatch;
     sw_sel_raw = 0;
     repeat (80) @(posedge clk);  // allow minutes to advance at 2 Hz
 
-    // Exit adjust
+    // Exit adjust and ensure the pause toggle held
     sw_adj_raw = 0;
+    repeat (12) @(posedge clk);
+
+    snapshot = {mt, mo, st, so};
+    repeat (40) @(posedge clk);
+    if ({mt, mo, st, so} !== snapshot) begin
+      $error("Timer advanced after exiting adjust despite pause toggle during adjust");
+      $fatal;
+    end
+
+    // Resume running from the paused state
+    press_pause();
+    repeat (20) @(posedge clk);
+
+    // Pause again and make sure adjusting keeps us paused afterwards
+    press_pause();
+    repeat (20) @(posedge clk);
+
+    sw_adj_raw = 1; sw_sel_raw = 1;  // adjust seconds while paused
+    repeat (40) @(posedge clk);
+    sw_sel_raw = 0;                  // then adjust minutes while still paused
     repeat (40) @(posedge clk);
 
     // Pause again and make sure adjusting keeps us paused afterwards
