@@ -49,14 +49,7 @@ module tb_top_stopwatch;
     end
   endtask
 
-  task hold_pause(input integer cycles);
-    begin
-      btn_pause_raw = 1;
-      repeat (cycles) @(posedge clk);
-      btn_pause_raw = 0;
-      repeat (4) @(posedge clk);
-    end
-  endtask
+  reg [15:0] snapshot;
 
   initial begin
     $display("== Sim start ==");
@@ -77,21 +70,47 @@ module tb_top_stopwatch;
 
     // Enter adjust mode, adjust SECONDS (SEL=1)
     sw_adj_raw = 1; sw_sel_raw = 1;
-    hold_pause(16);          // stream seconds while holding pause
-    repeat (60) @(posedge clk);
-    press_pause();           // single step seconds once more
-    repeat (60) @(posedge clk);
+    repeat (80) @(posedge clk);  // allow seconds to advance at 2 Hz
 
     // Switch to adjust MINUTES (SEL=0)
     sw_sel_raw = 0;
-    hold_pause(16);          // stream minutes while holding pause
-    repeat (60) @(posedge clk);
-    press_pause();           // single step minutes once more
-    repeat (60) @(posedge clk);
+    repeat (80) @(posedge clk);  // allow minutes to advance at 2 Hz
 
     // Exit adjust
     sw_adj_raw = 0;
     repeat (40) @(posedge clk);
+
+    // Pause again and make sure adjusting keeps us paused afterwards
+    press_pause();
+    repeat (20) @(posedge clk);
+
+    sw_adj_raw = 1; sw_sel_raw = 1;  // adjust seconds while paused
+    repeat (40) @(posedge clk);
+    sw_sel_raw = 0;                  // then adjust minutes while still paused
+    repeat (40) @(posedge clk);
+
+    snapshot = {mt, mo, st, so};
+    sw_adj_raw = 0;                  // leave adjust
+    repeat (20) @(posedge clk);
+    if ({mt, mo, st, so} !== snapshot) begin
+      $error("Timer advanced after adjust even though pause should persist");
+      $fatal;
+    end
+
+    // Resume from pause and run a bit more
+    press_pause();
+    repeat (40) @(posedge clk);
+
+    // Hit reset and ensure we zero out
+    btn_reset_raw = 1;
+    repeat (12) @(posedge clk);
+    btn_reset_raw = 0;
+    repeat (5) @(posedge clk);
+    if (mt | mo | st | so) begin
+      $error("Reset failed to clear stopwatch digits");
+      $fatal;
+    end
+    repeat (15) @(posedge clk);
 
     $display("== Sim done ==");
     $finish;
