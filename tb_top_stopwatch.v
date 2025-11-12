@@ -49,6 +49,15 @@ module tb_top_stopwatch;
     end
   endtask
 
+  task hold_pause(input integer cycles);
+    begin
+      btn_pause_raw = 1;
+      repeat (cycles) @(posedge clk);
+      btn_pause_raw = 0;
+      repeat (4) @(posedge clk);
+    end
+  endtask
+
   initial begin
     $display("== Sim start ==");
     // Release reset after a few cycles
@@ -68,11 +77,17 @@ module tb_top_stopwatch;
 
     // Enter adjust mode, adjust SECONDS (SEL=1)
     sw_adj_raw = 1; sw_sel_raw = 1;
-    repeat (40) @(posedge clk);
+    hold_pause(16);          // stream seconds while holding pause
+    repeat (20) @(posedge clk);
+    press_pause();           // single step seconds once more
+    repeat (20) @(posedge clk);
 
     // Switch to adjust MINUTES (SEL=0)
     sw_sel_raw = 0;
-    repeat (40) @(posedge clk);
+    hold_pause(16);          // stream minutes while holding pause
+    repeat (20) @(posedge clk);
+    press_pause();           // single step minutes once more
+    repeat (20) @(posedge clk);
 
     // Exit adjust
     sw_adj_raw = 0;
