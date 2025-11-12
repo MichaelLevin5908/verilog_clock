@@ -78,16 +78,16 @@ module tb_top_stopwatch;
     // Enter adjust mode, adjust SECONDS (SEL=1)
     sw_adj_raw = 1; sw_sel_raw = 1;
     hold_pause(16);          // stream seconds while holding pause
-    repeat (20) @(posedge clk);
+    repeat (60) @(posedge clk);
     press_pause();           // single step seconds once more
-    repeat (20) @(posedge clk);
+    repeat (60) @(posedge clk);
 
     // Switch to adjust MINUTES (SEL=0)
     sw_sel_raw = 0;
     hold_pause(16);          // stream minutes while holding pause
-    repeat (20) @(posedge clk);
+    repeat (60) @(posedge clk);
     press_pause();           // single step minutes once more
-    repeat (20) @(posedge clk);
+    repeat (60) @(posedge clk);
 
     // Exit adjust
     sw_adj_raw = 0;
