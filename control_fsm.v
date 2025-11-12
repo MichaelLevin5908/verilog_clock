@@ -13,9 +13,27 @@ module control_fsm(
 );
   localparam RUN=2'd0, PAUSE=2'd1, AMIN=2'd2, ASEC=2'd3;
   reg [1:0] cur, nxt;
+  reg resume_to_pause;  // remember if we entered adjust from the paused state
 
   always @(posedge clk) begin
-    if (rst) cur<=RUN; else cur<=nxt;
+    if (rst) begin
+      cur <= RUN;
+      resume_to_pause <= 1'b0;
+    end else begin
+      cur <= nxt;
+
+      // Track whether we should fall back to PAUSE when leaving adjust mode.
+      if (cur==PAUSE && adj)
+        resume_to_pause <= 1'b1;   // entered adjust while paused
+      else if (cur==RUN && adj)
+        resume_to_pause <= 1'b0;   // entered adjust while running
+      else if (cur==RUN && pause_tog)
+        resume_to_pause <= 1'b1;   // transitioned into PAUSE
+      else if (cur==PAUSE && pause_tog)
+        resume_to_pause <= 1'b0;   // transitioned back to RUN
+      else if ((cur==AMIN || cur==ASEC) && pause_tog)
+        resume_to_pause <= ~resume_to_pause; // remember toggle while adjusting
+    end
   end
 
   always @(*) begin
@@ -32,11 +50,11 @@ module control_fsm(
         else if (adj &&  sel) nxt=ASEC;
       end
       AMIN:  begin
-        if (!adj) nxt=RUN;
+        if (!adj) nxt = resume_to_pause ? PAUSE : RUN;
         else if (sel) nxt=ASEC;
       end
       ASEC:  begin
-        if (!adj) nxt=RUN;
+        if (!adj) nxt = resume_to_pause ? PAUSE : RUN;
         else if (!sel) nxt=AMIN;
       end
     endcase
