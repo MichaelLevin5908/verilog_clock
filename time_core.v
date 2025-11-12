@@ -3,7 +3,7 @@ module time_core(
   input  wire       clk,
   input  wire       rst,
   input  wire       tick_active,   // 1-cycle pulse: 1 Hz or 2 Hz chosen upstream
-  input  wire       count_enable,  // RUN enables counting
+  input  wire       count_enable,  // high only while running (not paused/adjusting)
   input  wire       use_2hz,       // 1 in adjust mode
   input  wire       sel_minutes,   // which field to adjust when use_2hz=1
   input  wire       sel_seconds,
@@ -38,8 +38,11 @@ module time_core(
   // sec tens (0..5), enable when sec ones rolled 9->0
   bcd_counter #(.MAX(5)) u_st (.clk(clk), .rst(rst), .en(c_s_ones),
                                .q(sec_tens), .carry(c_s_tens));
-  // min ones (0..9), enable on: adjust-min OR seconds rolled 59->00
-  wire en_m_ones = base_min_ones | c_s_tens;
+  // min ones (0..9)
+  // In normal run mode the minutes advance whenever seconds roll 59->00
+  // (c_s_tens).  While adjusting seconds (use_2hz asserted with sel_seconds)
+  // the minutes must remain frozen, so mask off that cascade during adjust.
+  wire en_m_ones = base_min_ones | (c_s_tens & ~use_2hz);
   bcd_counter #(.MAX(9)) u_mo (.clk(clk), .rst(rst), .en(en_m_ones),
                                .q(min_ones), .carry(c_m_ones));
   // min tens (0..5), enable when min ones rolled 9->0

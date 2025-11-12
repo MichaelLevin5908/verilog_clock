@@ -9,7 +9,7 @@ module control_fsm(
   output reg  sel_minutes,
   output reg  sel_seconds,
   output reg  blink_enable,
-  output reg  count_enable
+  output reg  count_enable        // 1 only while free-running
 );
   localparam RUN=2'd0, PAUSE=2'd1, AMIN=2'd2, ASEC=2'd3;
   reg [1:0] cur, nxt;
@@ -45,10 +45,15 @@ module control_fsm(
   always @(*) begin
     use_1hz=0; use_2hz=0; sel_minutes=0; sel_seconds=0; blink_enable=0; count_enable=0;
     case(cur)
-      RUN:   begin use_1hz=1; count_enable=1; end
-      PAUSE: begin use_1hz=1; count_enable=0; end
-      AMIN:  begin use_2hz=1; sel_minutes=1; blink_enable=1; count_enable=1; end
-      ASEC:  begin use_2hz=1; sel_seconds=1; blink_enable=1; count_enable=1; end
+      RUN:   begin
+        use_1hz=1;
+        // Drop count_enable as soon as ADJ is asserted so the 1 Hz tick
+        // cannot advance the stopwatch while the user is entering adjust mode.
+        count_enable = adj ? 1'b0 : 1'b1;
+      end
+      PAUSE: begin use_1hz=1; count_enable=1'b0; end
+      AMIN:  begin use_2hz=1; sel_minutes=1; blink_enable=1; count_enable=1'b0; end
+      ASEC:  begin use_2hz=1; sel_seconds=1; blink_enable=1; count_enable=1'b0; end
     endcase
   end
 endmodule

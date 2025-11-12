@@ -1,6 +1,6 @@
 // debounce_sync.v
 module debounce_sync #(
-  parameter integer STABLE_COUNT = 2000 // ~10 ms if tick_fast ≈ 200 Hz
+  parameter integer STABLE_COUNT = 10   // ≈50 ms if tick_fast ≈ 200 Hz
 )(
   input  wire clk,
   input  wire tick_fast,

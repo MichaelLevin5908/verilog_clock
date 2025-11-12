@@ -3,7 +3,7 @@ module clock_divider #(
   parameter integer DIV_1HZ   = 100_000_000, // 100 MHz -> 1 Hz
   parameter integer DIV_2HZ   = 50_000_000,  // 100 MHz -> 2 Hz
   parameter integer DIV_FAST  = 500_000,     // ~200 Hz scan/debounce
-  parameter integer DIV_BLINK = 100_000_000  // 1 Hz blink (>=1 Hz, != 2 Hz)
+  parameter integer DIV_BLINK = 33_333_333   // ≈3 Hz tick -> ≈1.5 Hz blink (>1 Hz, ≠2 Hz)
 )(
   input  wire clk,
   input  wire rst,          // sync reset
