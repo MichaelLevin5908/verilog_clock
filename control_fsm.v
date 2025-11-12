@@ -31,8 +31,6 @@ module control_fsm(
         resume_to_pause <= 1'b1;   // transitioned into PAUSE
       else if (cur==PAUSE && pause_tog)
         resume_to_pause <= 1'b0;   // transitioned back to RUN
-      else if ((cur==AMIN || cur==ASEC) && pause_tog)
-        resume_to_pause <= ~resume_to_pause; // remember toggle while adjusting
     end
   end
 

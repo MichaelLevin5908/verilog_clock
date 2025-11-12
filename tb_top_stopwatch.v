@@ -70,15 +70,11 @@ module tb_top_stopwatch;
 
     // Enter adjust mode, adjust SECONDS (SEL=1)
     sw_adj_raw = 1; sw_sel_raw = 1;
-    repeat (40) @(posedge clk);  // allow seconds to advance at 2 Hz
-
-    // Toggle pause while still adjusting; effect should persist through adjust exit
-    press_pause();
-    repeat (20) @(posedge clk);
+    repeat (80) @(posedge clk);  // allow seconds to advance at 2 Hz
 
     // Switch to adjust MINUTES (SEL=0)
     sw_sel_raw = 0;
-    repeat (40) @(posedge clk);  // allow minutes to advance at 2 Hz
+    repeat (80) @(posedge clk);  // allow minutes to advance at 2 Hz
 
     // Exit adjust and ensure the pause toggle held
     sw_adj_raw = 0;
@@ -94,6 +90,15 @@ module tb_top_stopwatch;
     // Resume running from the paused state
     press_pause();
     repeat (20) @(posedge clk);
+
+    // Pause again and make sure adjusting keeps us paused afterwards
+    press_pause();
+    repeat (20) @(posedge clk);
+
+    sw_adj_raw = 1; sw_sel_raw = 1;  // adjust seconds while paused
+    repeat (40) @(posedge clk);
+    sw_sel_raw = 0;                  // then adjust minutes while still paused
+    repeat (40) @(posedge clk);
 
     // Pause again and make sure adjusting keeps us paused afterwards
     press_pause();
