@@ -68,11 +68,11 @@ module tb_top_stopwatch;
 
     // Enter adjust mode, adjust SECONDS (SEL=1)
     sw_adj_raw = 1; sw_sel_raw = 1;
-    repeat (40) @(posedge clk);
+    repeat (60) @(posedge clk);   // seconds tick at 2 Hz while adjusting
 
     // Switch to adjust MINUTES (SEL=0)
     sw_sel_raw = 0;
-    repeat (40) @(posedge clk);
+    repeat (60) @(posedge clk);   // minutes tick at 2 Hz while adjusting
 
     // Exit adjust
     sw_adj_raw = 0;
