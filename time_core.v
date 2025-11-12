@@ -7,6 +7,8 @@ module time_core(
   input  wire       use_2hz,       // 1 in adjust mode
   input  wire       sel_minutes,   // which field to adjust when use_2hz=1
   input  wire       sel_seconds,
+  input  wire       adj_step_hold,   // hold PAUSE to stream 2 Hz adjustments
+  input  wire       adj_step_pulse,  // tap PAUSE for single-step adjustments
   output wire [3:0] min_tens,
   output wire [3:0] min_ones,
   output wire [3:0] sec_tens,
@@ -21,10 +23,14 @@ module time_core(
       if (tick_active) begin
         if (!use_2hz) begin
           if (count_enable) base_sec_ones<=1;     // normal 1 Hz
-        end else begin
-          if (sel_seconds) base_sec_ones<=1;      // adjust seconds @2 Hz
-          else if (sel_minutes) base_min_ones<=1; // adjust minutes @2 Hz
+        end else if (adj_step_hold) begin
+          if (sel_seconds) base_sec_ones<=1;      // adjust seconds @2 Hz while held
+          else if (sel_minutes) base_min_ones<=1; // adjust minutes @2 Hz while held
         end
+      end
+      if (use_2hz && adj_step_pulse) begin
+        if (sel_seconds) base_sec_ones<=1;        // single manual tap
+        else if (sel_minutes) base_min_ones<=1;
       end
     end
   end

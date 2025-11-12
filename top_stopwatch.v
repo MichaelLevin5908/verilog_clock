@@ -46,12 +46,15 @@ module top_stopwatch(
     .blink_enable(blink_enable), .count_enable(count_enable)
   );
   wire tick_active = use_2hz ? tick_2hz : tick_1hz;
+  wire adj_step_hold  = use_2hz ? btn_pause_deb : 1'b0;
+  wire adj_step_pulse = use_2hz ? pause_tog     : 1'b0;
 
   // --------- Time core ---------
   time_core u_time(
     .clk(clk_100mhz), .rst(btn_reset),
     .tick_active(tick_active), .count_enable(count_enable),
     .use_2hz(use_2hz), .sel_minutes(sel_minutes), .sel_seconds(sel_seconds),
+    .adj_step_hold(adj_step_hold), .adj_step_pulse(adj_step_pulse),
     .min_tens(mt), .min_ones(mo), .sec_tens(st), .sec_ones(so)
   );
 
