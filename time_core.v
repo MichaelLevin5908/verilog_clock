@@ -3,7 +3,7 @@ module time_core(
   input  wire       clk,
   input  wire       rst,
   input  wire       tick_active,   // 1-cycle pulse: 1 Hz or 2 Hz chosen upstream
-  input  wire       count_enable,  // RUN enables counting
+  input  wire       count_enable,  // high only while running (not paused/adjusting)
   input  wire       use_2hz,       // 1 in adjust mode
   input  wire       sel_minutes,   // which field to adjust when use_2hz=1
   input  wire       sel_seconds,
