@@ -1,25 +1,24 @@
 // display_mux.v
 module display_mux(
-  input  wire       clk,
-  input  wire       rst,
-  input  wire       tick_fast,      // ~200 Hz
-  input  wire       blink_enable,
-  input  wire       blink_state,    // toggles @1 Hz
-  input  wire       sel_minutes,    // adjusting minutes?
-  input  wire       sel_seconds,    // adjusting seconds?
-  input  wire [3:0] mt, mo, st, so, // digits
-  output reg  [6:0] seg,            // active-low a..g
-  output reg  [3:0] an,             // active-low an[3:0]
-  output reg        dp              // active-low
+  input wire clk,
+  input wire rst,
+  input wire tick_fast,
+  input wire blink_enable,
+  input wire blink_state,
+  input wire sel_minutes,
+  input wire sel_seconds,
+  input wire [3:0] mt, mo, st, so,
+  output reg [6:0] seg,
+  output reg [3:0] an,
+  output reg dp
 );
-  // rotating digit index: 0=so,1=st,2=mo,3=mt
+
   reg [1:0] idx;
   always @(posedge clk) begin
     if (rst) idx<=0;
     else if (tick_fast) idx<=idx+1;
   end
 
-  // pick digit
   reg [3:0] bcd;
   always @(*) begin
     case(idx)
@@ -30,13 +29,11 @@ module display_mux(
     endcase
   end
 
-  // blink mask
   wire is_min = (idx==2'd2)||(idx==2'd3);
   wire is_sec = (idx==2'd0)||(idx==2'd1);
   wire blank  = blink_enable && ~blink_state &&
                 ((sel_minutes && is_min) || (sel_seconds && is_sec));
 
-  // encode BCD (active-low)
   reg [6:0] seg_n;
   always @(*) begin
     case (bcd)
@@ -54,7 +51,6 @@ module display_mux(
     endcase
   end
 
-  // outputs
   always @(*) begin
     case(idx)
       2'd0: an=4'b1110;
@@ -63,6 +59,6 @@ module display_mux(
       2'd3: an=4'b0111;
     endcase
     seg = blank ? 7'b1111111 : seg_n;
-    dp  = 1'b1; // off
+    dp  = 1'b1;
   end
 endmodule

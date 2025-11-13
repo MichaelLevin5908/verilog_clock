@@ -1,13 +1,13 @@
 // debounce_sync.v
 module debounce_sync #(
-  parameter integer STABLE_COUNT = 10   // ≈50 ms if tick_fast ≈ 200 Hz
+  parameter integer STABLE_COUNT = 10
 )(
-  input  wire clk,
-  input  wire tick_fast,
-  input  wire in_raw,
-  output reg  out_deb
+  input wire clk,
+  input wire tick_fast,
+  input wire in_raw,
+  output reg out_deb
 );
-  reg s1,s2;  // synchronizer
+  reg s1,s2;
   always @(posedge clk) begin s1<=in_raw; s2<=s1; end
 
   reg prev; reg [$clog2(STABLE_COUNT+1)-1:0] cnt;

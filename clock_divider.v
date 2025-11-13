@@ -1,19 +1,19 @@
 // clock_divider.v
 module clock_divider #(
-  parameter integer DIV_1HZ   = 100_000_000, // 100 MHz -> 1 Hz
-  parameter integer DIV_2HZ   = 50_000_000,  // 100 MHz -> 2 Hz
-  parameter integer DIV_FAST  = 500_000,     // ~200 Hz scan/debounce
-  parameter integer DIV_BLINK = 33_333_333   // ≈3 Hz tick -> ≈1.5 Hz blink (>1 Hz, ≠2 Hz)
+  parameter integer DIV_1HZ = 100_000_000,
+  parameter integer DIV_2HZ = 50_000_000,
+  parameter integer DIV_FAST = 500_000,
+  parameter integer DIV_BLINK = 33_333_333
 )(
-  input  wire clk,
-  input  wire rst,          // sync reset
-  output reg  tick_1hz,
-  output reg  tick_2hz,
-  output reg  tick_fast,
-  output reg  tick_blink
+  input wire clk,
+  input wire rst,
+  output reg tick_1hz,
+  output reg tick_2hz,
+  output reg tick_fast,
+  output reg tick_blink
 );
   localparam W1=$clog2(DIV_1HZ), W2=$clog2(DIV_2HZ),
-             WF=$clog2(DIV_FAST), WB=$clog2(DIV_BLINK);
+  WF=$clog2(DIV_FAST), WB=$clog2(DIV_BLINK);
   reg [W1-1:0] c1; reg [W2-1:0] c2; reg [WF-1:0] cf; reg [WB-1:0] cb;
 
   always @(posedge clk) begin

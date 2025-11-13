@@ -1,21 +1,19 @@
+// tb_top_stopwatch.v
+// this is our test bench
+
 `timescale 1ns/1ps
-
 module tb_top_stopwatch;
-  // 100 MHz sim clock
   reg clk = 0;
-  always #5 clk = ~clk; // 10ns period
+  always #5 clk = ~clk;
 
-  // raw I/Os to top
   reg btn_reset_raw = 1;
   reg btn_pause_raw = 0;
-  reg sw_adj_raw    = 0;
-  reg sw_sel_raw    = 0;
+  reg sw_adj_raw = 0;
+  reg sw_sel_raw = 0;
 
   wire [6:0] seg;
   wire [3:0] an;
-  wire       dp;
-
-  // DUT
+  wire dp;
   top_stopwatch uut (
     .clk_100mhz(clk),
     .btn_reset_raw(btn_reset_raw),
@@ -25,23 +23,18 @@ module tb_top_stopwatch;
     .seg(seg), .an(an), .dp(dp)
   );
 
-  // --------- SPEED UP the design for sim via defparam ----------
-  // Clock divider: make “1 Hz” every 10 cycles, “2 Hz” every 5 cycles, fast tick every 2 cycles
   defparam uut.u_div.DIV_1HZ   = 10;
   defparam uut.u_div.DIV_2HZ   = 5;
   defparam uut.u_div.DIV_FAST  = 2;
   defparam uut.u_div.DIV_BLINK = 7;
 
-  // Debouncers: shrink stable window to 2 samples
   defparam uut.u_db_adj.STABLE_COUNT   = 2;
   defparam uut.u_db_sel.STABLE_COUNT   = 2;
   defparam uut.u_db_rst.STABLE_COUNT   = 2;
   defparam uut.u_db_pause.STABLE_COUNT = 2;
 
-  // Peek the internal BCD digits (declared in top)
   wire [3:0] mt = uut.mt, mo = uut.mo, st = uut.st, so = uut.so;
 
-  // Helpers to "press" a button with a short clean pulse
   task press_pause;
     begin
       btn_pause_raw = 1; repeat (4) @(posedge clk);
@@ -53,30 +46,23 @@ module tb_top_stopwatch;
 
   initial begin
     $display("== Sim start ==");
-    // Release reset after a few cycles
     repeat (8) @(posedge clk);
     btn_reset_raw = 0;
 
-    // Let it run for a few "seconds" (fast)
     repeat (40) @(posedge clk);
 
-    // Pause
     press_pause();
     repeat (20) @(posedge clk);
 
-    // Resume
     press_pause();
     repeat (20) @(posedge clk);
 
-    // Enter adjust mode, adjust SECONDS (SEL=1)
     sw_adj_raw = 1; sw_sel_raw = 1;
-    repeat (80) @(posedge clk);  // allow seconds to advance at 2 Hz
+    repeat (80) @(posedge clk);
 
-    // Switch to adjust MINUTES (SEL=0)
     sw_sel_raw = 0;
-    repeat (80) @(posedge clk);  // allow minutes to advance at 2 Hz
+    repeat (80) @(posedge clk);
 
-    // Exit adjust and ensure the pause toggle held
     sw_adj_raw = 0;
     repeat (12) @(posedge clk);
 
@@ -87,41 +73,36 @@ module tb_top_stopwatch;
       $fatal;
     end
 
-    // Resume running from the paused state
     press_pause();
     repeat (20) @(posedge clk);
 
-    // Pause again and make sure adjusting keeps us paused afterwards
     press_pause();
     repeat (20) @(posedge clk);
 
-    sw_adj_raw = 1; sw_sel_raw = 1;  // adjust seconds while paused
+    sw_adj_raw = 1; sw_sel_raw = 1;
     repeat (40) @(posedge clk);
-    sw_sel_raw = 0;                  // then adjust minutes while still paused
+    sw_sel_raw = 0;
     repeat (40) @(posedge clk);
 
-    // Pause again and make sure adjusting keeps us paused afterwards
     press_pause();
     repeat (20) @(posedge clk);
 
-    sw_adj_raw = 1; sw_sel_raw = 1;  // adjust seconds while paused
+    sw_adj_raw = 1; sw_sel_raw = 1;
     repeat (40) @(posedge clk);
-    sw_sel_raw = 0;                  // then adjust minutes while still paused
+    sw_sel_raw = 0;
     repeat (40) @(posedge clk);
 
     snapshot = {mt, mo, st, so};
-    sw_adj_raw = 0;                  // leave adjust
+    sw_adj_raw = 0;
     repeat (20) @(posedge clk);
     if ({mt, mo, st, so} !== snapshot) begin
       $error("Timer advanced after adjust even though pause should persist");
       $fatal;
     end
 
-    // Resume from pause and run a bit more
     press_pause();
     repeat (40) @(posedge clk);
 
-    // Hit reset and ensure we zero out
     btn_reset_raw = 1;
     repeat (12) @(posedge clk);
     btn_reset_raw = 0;
@@ -136,7 +117,6 @@ module tb_top_stopwatch;
     $finish;
   end
 
-  // Simple monitor (watch digits & anodes)
   initial begin
     $display("time\t mt mo : st so | an seg");
     forever begin

@@ -1,9 +1,9 @@
 // edge_detect.v
 module edge_detect(
-  input  wire clk,
-  input  wire rst,
-  input  wire in_level,
-  output reg  rise_pulse
+  input wire clk,
+  input wire rst,
+  input wire in_level,
+  output reg rise_pulse
 );
   reg d;
   always @(posedge clk) begin
